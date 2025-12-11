@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journal de Trading Pro</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 Journal de Trading Pro</h1>
+            <nav>
+                <button class="nav-btn active" onclick="showSection('journal')">Journal</button>
+                <button class="nav-btn" onclick="showSection('stats')">Statistiques</button>
+                <button class="nav-btn" onclick="showSection('history')">Historique</button>
+                <button class="nav-btn" onclick="showSection('config')">Configuration</button>
+            </nav>
+        </header>
+
+        <!-- Section Configuration -->
+        <section id="config-section" class="section" style="display:none;">
+            <div class="card">
+                <h2>⚙️ Configuration Google Sheets</h2>
+                <p class="info-text">Pour connecter votre journal à Google Sheets :</p>
+                <ol class="instructions">
+                    <li>Créez un nouveau Google Sheet</li>
+                    <li>Allez sur <a href="https://console.cloud.google.com" target="_blank">Google Cloud Console</a></li>
+                    <li>Créez un projet et activez l'API Google Sheets</li>
+                    <li>Créez une clé API et collez-la ci-dessous</li>
+                    <li>Partagez votre Sheet en lecture/écriture avec n'importe qui ayant le lien</li>
+                </ol>
+                
+                <div class="form-group">
+                    <label for="api-key">Clé API Google :</label>
+                    <input type="password" id="api-key" placeholder="Votre clé API Google">
+                </div>
+                
+                <div class="form-group">
+                    <label for="sheet-id">ID du Google Sheet :</label>
+                    <input type="text" id="sheet-id" placeholder="L'ID de votre Google Sheet (dans l'URL)">
+                    <small>L'ID se trouve dans l'URL : docs.google.com/spreadsheets/d/<strong>ID_ICI</strong>/edit</small>
+                </div>
+                
+                <button class="btn-primary" onclick="saveConfig()">💾 Enregistrer la configuration</button>
+                <button class="btn-secondary" onclick="testConnection()">🔍 Tester la connexion</button>
+                <div id="config-status"></div>
+            </div>
+        </section>
+
+        <!-- Section Journal -->
+        <section id="journal-section" class="section">
+            <div class="card">
+                <h2>📝 Nouveau Trade</h2>
+                <form id="trade-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="date">Date & Heure *</label>
+                            <input type="datetime-local" id="date" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="asset">Actif *</label>
+                            <input type="text" id="asset" placeholder="Ex: EUR/USD, BTC, AAPL" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="direction">Direction *</label>
+                            <select id="direction" required>
+                                <option value="">Choisir...</option>
+                                <option value="LONG">📈 LONG (Hausse)</option>
+                                <option value="SHORT">📉 SHORT (Baisse)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="position-size">Taille de position</label>
+                            <input type="number" id="position-size" step="0.01" placeholder="Ex: 0.5">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="entry-price">Prix d'entrée *</label>
+                            <input type="number" id="entry-price" step="0.00001" placeholder="Prix d'entrée" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="exit-price">Prix de sortie</label>
+                            <input type="number" id="exit-price" step="0.00001" placeholder="Prix de sortie">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="stop-loss">Stop Loss</label>
+                            <input type="number" id="stop-loss" step="0.00001" placeholder="Stop Loss">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="take-profit">Take Profit</label>
+                            <input type="number" id="take-profit" step="0.00001" placeholder="Take Profit">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pnl">Profit/Perte ($)</label>
+                            <input type="number" id="pnl" step="0.01" placeholder="Ex: -50 ou +120">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="fees">Frais ($)</label>
+                            <input type="number" id="fees" step="0.01" placeholder="Frais de transaction">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="strategy">Stratégie utilisée</label>
+                        <input type="text" id="strategy" placeholder="Ex: Breakout, Support/Résistance, Moyenne mobile">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="timeframe">Timeframe</label>
+                        <select id="timeframe">
+                            <option value="">Choisir...</option>
+                            <option value="M1">M1 (1 minute)</option>
+                            <option value="M5">M5 (5 minutes)</option>
+                            <option value="M15">M15 (15 minutes)</option>
+                            <option value="M30">M30 (30 minutes)</option>
+                            <option value="H1">H1 (1 heure)</option>
+                            <option value="H4">H4 (4 heures)</option>
+                            <option value="D1">D1 (Daily)</option>
+                            <option value="W1">W1 (Weekly)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="setup-quality">Qualité du setup (1-5)</label>
+                        <div class="rating">
+                            <input type="radio" name="setup-quality" value="1" id="q1">
+                            <label for="q1">⭐</label>
+                            <input type="radio" name="setup-quality" value="2" id="q2">
+                            <label for="q2">⭐</label>
+                            <input type="radio" name="setup-quality" value="3" id="q3">
+                            <label for="q3">⭐</label>
+                            <input type="radio" name="setup-quality" value="4" id="q4">
+                            <label for="q4">⭐</label>
+                            <input type="radio" name="setup-quality" value="5" id="q5">
+                            <label for="q5">⭐</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emotions">État émotionnel</label>
+                        <select id="emotions">
+                            <option value="">Choisir...</option>
+                            <option value="Confiant">😊 Confiant</option>
+                            <option value="Calme">😌 Calme</option>
+                            <option value="Anxieux">😰 Anxieux</option>
+                            <option value="FOMO">😱 FOMO</option>
+                            <option value="Revanchard">😤 Revanchard</option>
+                            <option value="Euphorique">🤑 Euphorique</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="screenshot">📸 Screenshot du trade</label>
+                        <input type="file" id="screenshot" accept="image/*">
+                        <div id="image-preview"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">📋 Notes et observations</label>
+                        <textarea id="notes" rows="4" placeholder="Décrivez votre analyse, ce qui s'est passé, ce que vous avez appris..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="mistakes">❌ Erreurs commises</label>
+                        <textarea id="mistakes" rows="2" placeholder="Qu'auriez-vous pu faire différemment ?"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn-primary">💾 Enregistrer le trade</button>
+                        <button type="button" class="btn-secondary" onclick="resetForm()">🔄 Réinitialiser</button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Section Statistiques -->
+        <section id="stats-section" class="section" style="display:none;">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Trades</h3>
+                    <div class="stat-value" id="total-trades">0</div>
+                </div>
+                <div class="stat-card success">
+                    <h3>Trades Gagnants</h3>
+                    <div class="stat-value" id="winning-trades">0</div>
+                </div>
+                <div class="stat-card danger">
+                    <h3>Trades Perdants</h3>
+                    <div class="stat-value" id="losing-trades">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Win Rate</h3>
+                    <div class="stat-value" id="win-rate">0%</div>
+                </div>
+                <div class="stat-card">
+                    <h3>P&L Total</h3>
+                    <div class="stat-value" id="total-pnl">$0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Gain Moyen</h3>
+                    <div class="stat-value" id="avg-win">$0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Perte Moyenne</h3>
+                    <div class="stat-value" id="avg-loss">$0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Ratio Risk/Reward</h3>
+                    <div class="stat-value" id="rr-ratio">0</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>📊 Analyse par Actif</h2>
+                <div id="asset-stats"></div>
+            </div>
+
+            <div class="card">
+                <h2>🎯 Analyse par Stratégie</h2>
+                <div id="strategy-stats"></div>
+            </div>
+        </section>
+
+        <!-- Section Historique -->
+        <section id="history-section" class="section" style="display:none;">
+            <div class="card">
+                <h2>📜 Historique des Trades</h2>
+                <button class="btn-secondary" onclick="refreshHistory()">🔄 Actualiser</button>
+                <div id="trades-list"></div>
+            </div>
+        </section>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
